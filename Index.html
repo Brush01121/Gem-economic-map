@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEM - Geo Econo Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #e0e7ff 100%); position: relative; overflow-x: hidden; }
+    .bg-decoration { position: absolute; inset: 0; opacity: 0.3; pointer-events: none; }
+    .bg-blob { position: absolute; width: 384px; height: 384px; border-radius: 50%; mix-blend-mode: multiply; filter: blur(64px); animation: pulse-slow 3s ease-in-out infinite; }
+    .bg-blob-1 { top: 0; left: 0; background: #60a5fa; }
+    .bg-blob-2 { bottom: 0; right: 0; background: #818cf8; animation-delay: 1s; }
+    @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.5; } }
+    .container { position: relative; z-index: 10; }
+    header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border-bottom: 1px solid rgba(226, 232, 240, 0.5); }
+    .header-content { max-width: 1280px; margin: 0 auto; padding: 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #2563eb, #4f46e5); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    h1 { font-size: 30px; font-weight: 900; background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { font-size: 14px; color: #64748b; font-weight: 500; }
+    .ai-badge { padding: 6px 12px; background: linear-gradient(135deg, #f97316, #ea580c); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .settings-btn { padding: 12px; border-radius: 12px; background: #f1f5f9; border: none; cursor: pointer; transition: all 0.2s; }
+    .settings-btn:hover { background: #e2e8f0; transform: scale(1.05); }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 50; padding: 16px; }
+    .modal.show { display: flex; align-items: center; justify-content: center; }
+    .modal-box { background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); padding: 32px; max-width: 448px; width: 100%; }
+    .modal-box h2 { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 8px; }
+    input[type="password"] { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 14px; }
+    input:focus { outline: none; border-color: #3b82f6; }
+    .hint { margin-top: 8px; font-size: 12px; color: #64748b; }
+    .link { color: #3b82f6; text-decoration: none; font-weight: 600; }
+    .link:hover { text-decoration: underline; }
+    .btn-primary { width: 100%; padding: 12px; background: linear-gradient(to right, #2563eb, #4f46e5); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transform: scale(1.05); }
+    main { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+    .section-title { font-size: 18px; font-weight: 700; color: #334155; margin-bottom: 16px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
+    @media (min-width: 768px) { .metrics-grid { grid-template-columns: repeat(4, 1fr); } }
+    .metric-btn { padding: 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.7); color: #475569; border: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-weight: 600; }
+    .metric-btn:hover { background: white; transform: scale(1.05); }
+    .metric-btn.active { background: white; color: #1e293b; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-left: 4px solid #10b981; }
+    .metric-icon { font-size: 32px; margin-bottom: 8px; }
+    .card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); padding: 32px; margin-bottom: 32px; }
+    .map-area { width: 100%; height: 384px; background: linear-gradient(135deg, #dbeafe, #e0e7ff); border-radius: 16px; }
+    svg { width: 100%; height: 100%; }
+    circle { cursor: pointer; transition: all 0.3s; }
+    circle:hover { fill: #3b82f6 !important; }
+    .error { display: none; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 32px; color: #b91c1c; font-weight: 500; }
+    .error.show { display: block; }
+    .loading { display: none; text-align: center; padding: 48px; }
+    .loading.show { display: block; }
+    .spinner { width: 64px; height: 64px; border: 4px solid #dbeafe; border-top-color: #2563eb; border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .data { display: none; background: linear-gradient(135deg, white, #eff6ff); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); padding: 32px; border: 2px solid #dbeafe; }
+    .data.show { display: block; }
+    .data-header { display: flex; gap: 12px; margin-bottom: 24px; }
+    .accent { width: 12px; height: 48px; border-radius: 999px; background: linear-gradient(to bottom, #3b82f6, #4f46e5); }
+    .data-title { font-size: 24px; font-weight: 900; color: #1e293b; }
+    .data-grid { display: grid; gap: 24px; }
+    @media (min-width: 768px) { .data-grid { grid-template-columns: repeat(2, 1fr); } }
+    .data-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .label { font-size: 14px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
+    .value { font-size: 36px; font-weight: 900; color: #1e293b; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; margin-top: 8px; }
+    .badge-up { background: #dcfce7; color: #15803d; }
+    .badge-down { background: #fee2e2; color: #b91c1c; }
+    .initial { text-align: center; padding: 48px; background: rgba(255, 255, 255, 0.6); border-radius: 24px; border: 2px dashed #cbd5e1; }
+    .initial.hide { display: none; }
+    footer { text-align: center; padding: 32px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="bg-decoration">
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+  </div>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke-width="2"/>
+              <path d="M12 3v6m0 6v6m9-9h-6m-6 0H3" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1>GEM</h1>
+            <p class="subtitle">Geo Econo Map</p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <span class="ai-badge">🤖 Claude AI</span>
+          <button class="settings-btn" onclick="openSettings()">⚙️</button>
+        </div>
+      </div>
+    </header>
+    <div id="modal" class="modal">
+      <div class="modal-box">
+        <h2>API 설정</h2>
+        <div class="form-group">
+          <label>Claude API 키</label>
+          <input type="password" id="apiKey" placeholder="sk-ant-api03-...">
+          <p class="hint">💡 <a href="https://console.anthropic.com/" target="_blank" class="link">Anthropic Console</a>에서 발급</p>
+        </div>
+        <button class="btn-primary" onclick="saveKey()">저장하기</button>
+      </div>
+    </div>
+    <main>
+      <h2 class="section-title">📊 경제 지표 선택</h2>
+      <div class="metrics-grid">
+        <button class="metric-btn active" onclick="selectMetric('gdp', this)"><div class="metric-icon">💰</div><div>GDP</div></button>
+        <button class="metric-btn" onclick="selectMetric('poverty', this)"><div class="metric-icon">👥</div><div>빈곤지수</div></button>
+        <button class="metric-btn" onclick="selectMetric('unemployment', this)"><div class="metric-icon">📈</div><div>실업률</div></button>
+        <button class="metric-btn" onclick="selectMetric('inflation', this)"><div class="metric-icon">⚠️</div><div>인플레이션</div></button>
+      </div>
+      <div class="card">
+        <h2 class="section-title">🌍 국가 선택</h2>
+        <div class="map-area">
+          <svg viewBox="0 0 100 100" id="map">
+            <ellipse cx="50" cy="50" rx="45" ry="35" fill="#cbd5e1" opacity="0.3"/>
+          </svg>
+        </div>
+      </div>
+      <div id="error" class="error card"></div>
+      <div id="loading" class="loading card"></div>
+      <div id="data" class="data"></div>
+      <div id="initial" class="initial card">
+        <div style="font-size: 64px; margin-bottom: 16px;">🌍</div>
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">지도에서 국가를 선택해주세요</h3>
+        <p>국가를 클릭하면 경제 데이터를 확인할 수 있습니다</p>
+      </div>
+    </main>
+    <footer>
+      <p style="font-weight: 500;">Made with 💙 by GEM Team</p>
+      <p style="font-size: 12px; margin-top: 4px;">Powered by Claude AI</p>
+    </footer>
+  </div>
+  <script>
+    let API_KEY = '';
+    let currentMetric = 'gdp';
+    let currentCountry = null;
+    const metrics = { gdp: 'GDP', poverty: '빈곤지수', unemployment: '실업률', inflation: '인플레이션' };
+    const countries = [
+      { id: 'korea', name: '대한민국', x: 70, y: 40 },
+      { id: 'usa', name: '미국', x: 20, y: 35 },
+      { id: 'japan', name: '일본', x: 75, y: 38 },
+      { id: 'china', name: '중국', x: 65, y: 42 },
+      { id: 'germany', name: '독일', x: 48, y: 32 },
+      { id: 'uk', name: '영국', x: 45, y: 30 },
+      { id: 'france', name: '프랑스', x: 46, y: 35 },
+      { id: 'india', name: '인도', x: 62, y: 50 },
+      { id: 'brazil', name: '브라질', x: 30, y: 65 },
+      { id: 'australia', name: '호주', x: 78, y: 70 }
+    ];
+    function init() {
+      drawMap();
+      console.log('GEM 초기화 완료');
+    }
+    function drawMap() {
+      const map = document.getElementById('map');
+      countries.forEach(country => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.onclick = () => selectCountry(country);
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', country.x);
+        circle.setAttribute('cy', country.y);
+        circle.setAttribute('r', '1.8');
+        circle.setAttribute('fill', '#64748b');
+        circle.setAttribute('id', 'marker-' + country.id);
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', country.x);
+        text.setAttribute('y', country.y - 3);
+        text.setAttribute('font-size', '2');
+        text.setAttribute('fill', '#475569');
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-weight', '600');
+        text.textContent = country.name;
+        g.appendChild(circle);
+        g.appendChild(text);
+        map.appendChild(g);
+      });
+    }
+    function openSettings() { document.getElementById('modal').classList.add('show'); }
+    function saveKey() {
+      const key = document.getElementById('apiKey').value.trim();
+      if (key) {
+        API_KEY = key;
+        document.getElementById('modal').classList.remove('show');
+        alert('API 키가 저장되었습니다! ✅');
+      } else {
+        alert('API 키를 입력해주세요');
+      }
+    }
+    document.getElementById('modal').onclick = function(e) {
+      if (e.target.id === 'modal') this.classList.remove('show');
+    };
+    function selectMetric(metric, btn) {
+      currentMetric = metric;
+      document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (currentCountry) fetchData();
+    }
+    function selectCountry(country) {
+      currentCountry = country;
+      countries.forEach(c => {
+        const marker = document.getElementById('marker-' + c.id);
+        if (marker) {
+          marker.setAttribute('r', '1.8');
+          marker.setAttribute('fill', '#64748b');
+        }
+      });
+      const selected = document.getElementById('marker-' + country.id);
+      if (selected) {
+        selected.setAttribute('r', '2.5');
+        selected.setAttribute('fill', '#3b82f6');
+      }
+      fetchData();
+    }
+    function fetchData() {
+      if (!API_KEY) {
+        showError('Claude API 키를 먼저 설정해주세요!');
+        return;
+      }
+      document.getElementById('initial').classList.add('hide');
+      document.getElementById('error').classList.remove('show');
+      document.getElementById('data').classList.remove('show');
+      document.getElementById('loading').classList.add('show');
+      document.getElementById('loading').innerHTML = '<div class="spinner"></div><p style="color: #475569; font-weight: 500;">Claude가 분석 중...</p>';
+      google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError).fetchEconomicData(API_KEY, currentCountry.name, metrics[currentMetric]);
+    }
+    function onSuccess(result) {
+      document.getElementById('loading').classList.remove('show');
+      if (result.success) {
+        displayData(result.data);
+      } else {
+        showError('데이터 오류: ' + result.error);
+      }
+    }
+    function onError(error) {
+      document.getElementById('loading').classList.remove('show');
+      showError('API 호출 실패. API 키를 확인하세요.');
+    }
+    function displayData(data) {
+      const html = `
+        <div class="data-header">
+          <div class="accent"></div>
+          <div>
+            <div class="data-title">${currentCountry.name}</div>
+            <p class="subtitle">${metrics[currentMetric]} 데이터</p>
+          </div>
+        </div>
+        <div class="data-grid">
+          <div class="data-card">
+            <div class="label">현재 수치</div>
+            <div class="value">${data.value} <span style="font-size: 20px; color: #64748b;">${data.unit}</span></div>
+            <div class="badge ${data.trend === '증가' ? 'badge-up' : 'badge-down'}">
+              ${data.trend === '증가' ? '↗' : '↘'} ${data.trend}
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="label">기준 연도</div>
+            <div class="value" style="font-size: 28px;">${data.year}</div>
+            <p style="color: #475569; margin-top: 12px; line-height: 1.6;">${data.description}</p>
+          </div>
+        </div>
+      `;
+      document.getElementById('data').innerHTML = html;
+      document.getElementById('data').classList.add('show');
+    }
+    function showError(msg) {
+      document.getElementById('error').textContent = '⚠️ ' + msg;
+      document.getElementById('error').classList.add('show');
+      setTimeout(() => document.getElementById('error').classList.remove('show'), 5000);
+    }
+    window.onload = init;
+  </script>
+</body>
+</html>
